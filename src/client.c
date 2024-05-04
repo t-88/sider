@@ -1,10 +1,16 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <assert.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+
+#include "network.h"
+#include "client.h"
 
 
 int client() 
@@ -27,17 +33,11 @@ int client()
   if(out) 
   {
     printf("ERROR: failed to connect to server\n");
-
     goto clean_up;
   }
 
-
-  char wbuf[] = "SUP MA BOY";
-  write(fd,wbuf,sizeof(wbuf));
-
-  char rbuf[64];
-  read(fd,rbuf,sizeof(rbuf) - 1);
-  printf("MSG: server send: %s\n",rbuf);
+  send_req(fd,"hello server whats up");
+  recv_req(fd);
 
 
 clean_up:

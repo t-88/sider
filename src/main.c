@@ -32,9 +32,6 @@ int main(int argc, char** argv)
     how_to_use_cmd();
     return -1;
   }
-
-
-  
-
+ 
   return 0;
 }

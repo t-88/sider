@@ -1,17 +1,23 @@
 
 #include <stdio.h>
 #include <stdbool.h>
+#include <stdint.h>
+#include <assert.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
 
 
+#include "network.h"
+#include "server.h"
+
+
 
 
 int server() 
 {
-  
   int out = 0;
 
   // create a tcp scoket 
@@ -56,22 +62,7 @@ int server()
       printf("WARN: failed to accpect client\n");
     }
 
-    
-    char rbuf[64] = {};
-    ssize_t n = read(client_fd,rbuf,sizeof(rbuf) - 1);
-    if(n < 0) 
-    {
-      printf("ERROR: failed to read from client\n");
-      continue;
-    }
-    printf("MSG: client send %s\n",rbuf);
-
-
-
-    char wbuf[] = "SUP MADA FUCKA";
-    write(client_fd,wbuf,sizeof(wbuf));
-
-
+    recv_req(client_fd);    
 
     close(client_fd);
   }
