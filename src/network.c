@@ -9,6 +9,7 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <unistd.h>
+#include <fcntl.h>
 
 
 #include "network.h"
@@ -108,4 +109,26 @@ int32_t recv_req(int client_fd) {
   buf[4 + MAX_MSG_SIZE] = '\0';
 
   printf("recv: %s\n",&buf[4]);
+}
+
+
+int fd_set_nb(int fd) 
+{
+  errno = 0;
+  int flags = fcntl(fd,F_GETFL,0);
+  if(errno) 
+  {
+    printf("ERROR: failed to get fd flags\n");
+    return -1;
+  }
+
+  flags |= O_NONBLOCK;
+  errno = 0;
+  fcntl(fd,F_SETFL,flags);
+  if(errno) 
+  {
+    printf("ERROR: failed to set fd flags\n");
+    return -1;
+  }
+  return 0;
 }

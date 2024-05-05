@@ -12,6 +12,7 @@
 - multi-threading
 - non blocking ops: async ops..., read,write,connect have non blocking modes, every blocking action can be perfomed in smth called thread pools. 
   - use fcntl to set fd to nonblocking, used to read and write fd flags 
+  - **poll** gets all the active fds that can perform operations, its used in non blocking mode. use **epool** for more advanced stuff.
 
 
 # Ref
