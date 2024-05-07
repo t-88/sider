@@ -35,9 +35,10 @@ int client()
     printf("ERROR: failed to connect to server\n");
     goto clean_up;
   }
-
-  send_req(fd,"a-b-c-d-e-f-g-h-e");
-   // recv_req(fd);
+  send_req(fd,"sup");
+  send_req(fd,"sup");
+   recv_req(fd);
+   recv_req(fd);
 
 clean_up:
   close(fd);
