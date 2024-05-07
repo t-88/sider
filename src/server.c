@@ -111,7 +111,7 @@ int accept_new_conn(DA_Conn_ptr* fd2conn, FileDesc fd)
 
 
   fd_set_nb(client_fd);
-  Conn* conn = (Conn*)malloc(sizeof(conn));
+  Conn* conn = (Conn*)malloc(sizeof(*conn));
   if(!conn) 
   {
     printf("ERROR: malloc failed to allocate new Conn\n");
