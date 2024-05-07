@@ -21,6 +21,7 @@ typedef struct Conn {
   char rbuf[4 + MAX_MSG_SIZE];
 
   size_t wbuf_size;
+  size_t wbuf_sent;
   char wbuf[4 + MAX_MSG_SIZE];
 } Conn;
 
@@ -30,6 +31,11 @@ int32_t nwrite(FileDesc fd,char* buf, size_t n);
 int32_t send_req(FileDesc fd,const char* msg);
 int32_t recv_req(FileDesc client_fd);
 int fd_set_nb(FileDesc fd);
+
+
+void handle_req(Conn* conn);
+void handle_res(Conn* conn);
+bool recv_req_conn(Conn* connn);
 
 
 

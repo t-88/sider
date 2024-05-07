@@ -66,8 +66,8 @@ int32_t send_req(int fd,const char* msg)
     printf("ERROR: failed to send req msg is too long\n");
     return -1;
   }
-
-  char buf[4 + msg_len] ;
+  printf("len: %d\n",msg_len);
+  char buf[4 + MAX_MSG_SIZE] ;
   memcpy(buf,&msg_len,4);
   memcpy(&buf[4],msg,msg_len);
 
@@ -76,6 +76,7 @@ int32_t send_req(int fd,const char* msg)
 
 
 int32_t recv_req(int client_fd) {
+
   char buf[4 + MAX_MSG_SIZE + 1];
   
   errno = 0;
@@ -132,3 +133,130 @@ int fd_set_nb(int fd)
   }
   return 0;
 }
+
+
+void handle_req(Conn* conn) 
+{
+  while(true) 
+  {
+    assert(conn->rbuf_size < sizeof(conn->rbuf));
+    int rv = 0;
+    do {
+      errno = 0;
+      //size_t read_size = sizeof(conn->rbuf) - conn->rbuf_size;
+      size_t read_size = 21;
+      rv = read(conn->fd,conn->rbuf,read_size);
+      printf("#> %d %.*s\n",rv,13,&conn->rbuf[4]);
+
+      
+    } while(rv < 0 && errno == EINTR);
+
+    assert(0);
+
+    if(rv < 0 && errno == EAGAIN){
+      return;
+    }
+
+    if(rv < 0) {
+      conn->status = ConnStatus_Exit;
+      printf("ERROR: failed to read fd=%d\n",conn->fd);
+      perror("read()");
+      return;
+    }
+
+    if(rv == 0) 
+    {
+      if(conn->rbuf_size > 0) 
+      {
+        printf("ERROR: unexpected EOF");
+      } else {
+        printf("ERROR: EOF");
+      }
+      conn->status = ConnStatus_Exit;
+      return;
+    }
+
+    conn->rbuf_size += rv;
+    assert(conn->rbuf_size <= sizeof(conn->rbuf));
+
+    while(recv_req_conn(conn)) {}
+    if(conn->status != ConnStatus_Req) {
+      return;
+    }
+  }   
+}
+
+void handle_res(Conn* conn) 
+{
+  while(true) 
+  {
+
+    size_t rv = 0;
+    do {
+      errno = 0;
+      size_t remain = conn->wbuf_size - conn->wbuf_sent;
+      rv = nwrite(conn->fd,&conn->wbuf[conn->wbuf_sent],remain);
+    } while(rv < 0 && errno == EINTR);
+      
+    if(rv < 0 && errno == EAGAIN) {
+      return;
+    }
+
+    if(rv < 0) 
+    {
+      printf("ERROR: failed to write to fd\n");
+      conn->status = ConnStatus_Exit;
+      return;       
+    }
+
+    conn->wbuf_sent += rv;
+    
+    // buffer was sent ssuccessfully
+    if(conn->wbuf_sent == conn->wbuf_size) 
+    {
+      conn->status = ConnStatus_Req;
+      conn->wbuf_sent = 0;
+      conn->wbuf_size = 0;
+      return;
+    }
+  }
+
+}
+
+bool recv_req_conn(Conn* conn) 
+{
+  if(conn->rbuf_size < 4) 
+  {
+    return false;
+  }
+  
+  uint32_t msg_len = 0;
+  memcpy(&msg_len,conn->rbuf,4); 
+
+  printf("reved len: %d\n",msg_len);
+  // not enough data 
+  if(4 + msg_len > conn->rbuf_size) 
+  {
+    conn->status = ConnStatus_Exit;
+    return false;
+  }
+
+  printf("recved: %.*s\n",msg_len,&conn->rbuf[4]);
+
+  memcpy(&conn->wbuf[0],&msg_len,4);
+  memcpy(&conn->wbuf[4],&conn->rbuf[4] ,msg_len);
+  conn->wbuf_size = 4 + msg_len;
+
+  size_t remain = conn->rbuf_size - 4 - msg_len;
+  if(remain) 
+  {
+    memmove(conn->rbuf,&conn->rbuf[4 + msg_len],remain);
+  }
+  conn->rbuf_size = remain;
+  // conn->status = ConnStatus_Res;
+  // handle_res(conn);
+
+  return conn->status == ConnStatus_Req;
+}
+
+

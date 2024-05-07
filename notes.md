@@ -15,6 +15,12 @@
   - **poll** gets all the active fds that can perform operations, its used in non blocking mode. use **epool** for more advanced stuff.
 
 
+
+
+### Info
+- [how to get the next power of two](https://stackoverflow.com/questions/466204/rounding-up-to-next-power-of-2)
+- [bit twiddling hacks](https://graphics.stanford.edu/%7Eseander/bithacks.html#RoundUpPowerOf2)
+
 # Ref
 - [beej.us guide](https://beej.us/guide/bgnet/html/split/)
 - [make your own redis](https://build-your-own.org/redis/03_hello_cs)

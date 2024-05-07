@@ -36,9 +36,8 @@ int client()
     goto clean_up;
   }
 
-  send_req(fd,"hello server whats up");
-  recv_req(fd);
-
+  send_req(fd,"a-b-c-d-e-f-g-h-e");
+   // recv_req(fd);
 
 clean_up:
   close(fd);
