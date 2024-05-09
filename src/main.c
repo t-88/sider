@@ -12,11 +12,33 @@
 #define DA_IMPLEMENTATION
 #include "da.h"
 
+#include "ht.h"
+
+
+typedef struct HT_string {
+  HT_Node node;
+  char val[16];
+} HT_string;
+
+void main(void) {
+
+  HTable* table = ht_init(4);
+
+  ht_insert(table,"asd","asd");
+  ht_insert(table,"ur mom","coool");
+  ht_insert(table,"kinda cool","asd");
+  ht_insert(table,"kinda cool","ur mom");
+  ht_print(table);
+
+  ht_free(table);
+}
+
+
 void how_to_use_cmd() {
     printf("./run.sh <user> # user = {server , client}\n");
 }
 
-int main(int argc, char** argv)
+int main1(int argc, char** argv)
 {
   if(argc <= 1) 
   {

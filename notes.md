@@ -14,7 +14,11 @@
   - use fcntl to set fd to nonblocking, used to read and write fd flags 
   - **poll** gets all the active fds that can perform operations, its used in non blocking mode. use **epool** for more advanced stuff.
 
-
+**Storing the data**: use hashtable or trees, gonna use hashtables
+Two methods to deal with collision 
+   - chaining: keys are lists, push into list
+   - open addersing: find another slot
+you cant mess a chaining hash table, its more customizable
 
 
 ### Info
