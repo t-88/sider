@@ -11,8 +11,14 @@
 #include <unistd.h>
 #include <fcntl.h>
 
-
 #include "network.h"
+#include "da.h"
+
+typedef struct DA_string {
+  char** items;
+  uint32_t capacity;
+  uint32_t len;
+} DA_string;
 
 
 int32_t nread(int fd,char* buf, size_t n) 
@@ -177,7 +183,7 @@ void handle_req(Conn* conn)
     if(conn->status != ConnStatus_Req) {
       return;
     }
-  }   
+  }
 }
 
 void handle_res(Conn* conn) 
@@ -221,6 +227,65 @@ void handle_res(Conn* conn)
 
 }
 
+
+
+bool execute_get(DA_string cmd) {
+  assert(cmd.len == 2);
+  printf("get %s\n",cmd.items[1]);
+  return true;
+}
+
+bool execute_set(DA_string cmd) {
+  assert(cmd.len == 3);
+  printf("set %s = %s\n",cmd.items[1],cmd.items[2]);
+  return true;
+}
+
+bool execute_del(DA_string cmd) {
+  assert(cmd.len == 2);
+  printf("del %s\n",cmd.items[1]);
+  return true;
+}
+
+bool parse_execute_req(int32_t req_len,const char* req) 
+{
+  ParsedReq p = {0};
+  DA_string cmd = {.capacity = 8}; 
+  da_init(cmd);
+
+  
+  // split by space
+  int last_i = 0;
+  for(int i = 0; i < req_len; i++) 
+  {
+    if(req[i] == ' ' || i == req_len - 1) 
+    {
+      if(i == req_len - 1 && req[i] != ' ') {
+        i++;
+      }
+      char* buf = malloc(i - last_i + 1);
+      memcpy(buf,&req[last_i],i - last_i);
+      buf[i - last_i] = '\0';
+      last_i = i + 1;
+
+      da_append(cmd,buf);
+    }
+  }
+  
+  bool out = true;
+  if(cmd.len == 2 && strcmp(cmd.items[0],"get") == 0) {
+    out = execute_get(cmd);
+  } else if(cmd.len == 2 && strcmp(cmd.items[0],"del") == 0) { 
+     out = execute_del(cmd);
+  } else if(cmd.len == 3 && strcmp(cmd.items[0],"set") == 0) { 
+     out = execute_set(cmd);
+  } else {
+    out = false;
+  }
+  da_free_items(cmd);
+  da_free(cmd);
+  return out;
+}
 bool recv_req_conn(Conn* conn) 
 {
   if(conn->rbuf_size < 4) 
@@ -238,11 +303,12 @@ bool recv_req_conn(Conn* conn)
     return false;
   }
 
-  printf("recved: %.*s\n",msg_len,&conn->rbuf[4]);
+  if(!parse_execute_req(msg_len,&conn->rbuf[4]))
+  {
+    return false;  
+  }
 
-  memcpy(&conn->wbuf[0],&msg_len,4);
-  memcpy(&conn->wbuf[4],&conn->rbuf[4] ,msg_len);
-  conn->wbuf_size = 4 + msg_len;
+  // printf("recved: %.*s\n",msg_len,&conn->rbuf[4]);
 
   size_t remain = conn->rbuf_size - 4 - msg_len;
   if(remain) 
@@ -250,10 +316,7 @@ bool recv_req_conn(Conn* conn)
     memmove(conn->rbuf,&conn->rbuf[4 + msg_len],remain);
   }
   conn->rbuf_size = remain;
-  conn->status = ConnStatus_Res;
-  handle_res(conn);
 
   return conn->status == ConnStatus_Req;
 }
-
 

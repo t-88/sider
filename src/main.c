@@ -9,7 +9,8 @@
 #include "server.h"
 #include "client.h"
 
-
+#define DA_IMPLEMENTATION
+#include "da.h"
 
 void how_to_use_cmd() {
     printf("./run.sh <user> # user = {server , client}\n");

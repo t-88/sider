@@ -11,7 +11,7 @@
 
 #include "network.h"
 #include "client.h"
-
+#include "da.h"
 
 int client() 
 {
@@ -35,10 +35,9 @@ int client()
     printf("ERROR: failed to connect to server\n");
     goto clean_up;
   }
-  send_req(fd,"sup");
-  send_req(fd,"sup");
-   recv_req(fd);
-   recv_req(fd);
+  send_req(fd,"set k 1");
+  send_req(fd,"get k");
+  send_req(fd,"del k");
 
 clean_up:
   close(fd);

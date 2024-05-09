@@ -26,6 +26,20 @@ typedef struct Conn {
 } Conn;
 
 
+
+typedef enum {
+  ReqStatus_Ok,
+  ReqStatus_Err,
+
+} ReqStatus;
+typedef struct ParsedReq 
+{
+  ReqStatus status;
+  char* resbuf;
+  int32_t resbuf_size;
+} ParsedReq;
+
+
 int32_t nread(FileDesc fd,char* buf, size_t n);
 int32_t nwrite(FileDesc fd,char* buf, size_t n);
 int32_t send_req(FileDesc fd,const char* msg);
