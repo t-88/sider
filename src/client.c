@@ -36,8 +36,11 @@ int client()
     goto clean_up;
   }
   send_req(fd,"set k 1");
-  send_req(fd,"get k");
+  recv_req(fd);
+  send_req(fd,"get v");
+  recv_req(fd);
   send_req(fd,"del k");
+  recv_req(fd);
 
 clean_up:
   close(fd);

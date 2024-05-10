@@ -19,15 +19,16 @@ typedef struct HTable {
   uint32_t size;
 } HTable;
 
-typedef struct HMap {
+typedef struct HMap {  
   HTable* table;
 } HMap;
 
-static HNode* hn_detach(HNode** n);
+static HNode* hn_init(char* key,char* val);
+static void hn_free(HNode* n);
 
 static HTable* ht_init(int32_t size);
 static void ht_free(HTable* t);
-static HNode* ht_create_node(char* key, char* val);
+static HNode * ht_detach(HTable* t,HNode** n);
 static void ht_insert(HTable* t, HNode* n);
 
 HMap* hm_init();
@@ -36,6 +37,7 @@ void hm_print(HMap* m);
 void hm_insert(HMap* m, char* key,char* val);
 void hm_resize(HMap* m);
 char* hm_get(HMap* m,char* key);
+void hm_delete(HMap* m,char* key);
 
 #endif // HMAP_H
 
@@ -56,10 +58,20 @@ static uint64_t hash_djb2(const char *str)
 
 // hash node functions
 // --------------------
-static HNode* hn_detach(HNode** n) {
-  HNode* node = *n;
-  *n = node->next;
-  return node;
+static HNode* hn_init(char* key, char* val) {
+  HNode* n = malloc(sizeof(*n));
+  n->key = malloc(strlen(key));
+  n->val = malloc(strlen(key));
+  strcpy(n->key,key);
+  strcpy(n->val,val);
+  n->hkey = hash_djb2(n->key);
+  return n;
+}
+
+static void hn_free(HNode* n) {
+  free(n->key);
+  free(n->val);
+  free(n);
 }
 // --------------------
 
@@ -74,6 +86,13 @@ static HTable* ht_init(int32_t size) {
   return t;
 }
 
+static HNode* ht_detach(HTable* t,HNode** n) {
+  HNode* node = *n;
+  *n = node->next;
+  t->size--;
+  return node;
+}
+
 static void ht_free(HTable* t) {
   if(!t) return;
 
@@ -83,22 +102,10 @@ static void ht_free(HTable* t) {
     HNode* cur = t->items[i];
     while(cur != NULL) {
       HNode* next = cur->next;
-      free(cur->key);
-      free(cur->val);
-      free(cur);
+      hn_free(cur);
       cur = next;
     }
   }
-}
-
-static HNode* ht_create_node(char* key, char* val) {
-  HNode* n = malloc(sizeof(*n));
-  n->key = malloc(strlen(key));
-  n->val = malloc(strlen(key));
-  strcpy(n->key,key);
-  strcpy(n->val,val);
-  n->hkey = hash_djb2(n->key);
-  return n;
 }
 
 static void ht_insert(HTable* t, HNode* n) {
@@ -157,7 +164,7 @@ void hm_print(HMap* m) {
 }
 
 void hm_insert(HMap* m, char* key,char* val) {
-  HNode* n = ht_create_node(key,val);
+  HNode* n = hn_init(key,val);
   ht_insert(m->table,n); 
   
   float load_factor = (float) m->table->size / m->table->capacity;
@@ -176,7 +183,7 @@ void hm_resize(HMap* m) {
 
     HNode** addr = &t->items[i];
     while(*addr != NULL) 
-      ht_insert(m->table, hn_detach(addr)); 
+      ht_insert(t, ht_detach(t,addr)); 
   }
   free(t);
 }
@@ -195,6 +202,24 @@ char* hm_get(HMap* m, char* key) {
   }
 
   return NULL;
+}
+
+void hm_delete(HMap* m, char* key) {
+  HTable* t = m->table;
+  uint64_t hkey = hash_djb2(key);
+  uint32_t pos = hkey & (t->capacity - 1);
+
+  HNode** addr = &t->items[pos];
+  while(*addr!= NULL) { 
+    if((*addr)->hkey == hkey && strcmp((*addr)->key,key) == 0) {
+      HNode* n = ht_detach(t,addr);
+      hn_free(n);
+      return;
+    }
+    addr = &(*addr)->next;
+  }
+
+  return;
 }
 // -------------------
 

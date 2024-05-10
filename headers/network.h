@@ -39,6 +39,11 @@ typedef struct ParsedReq
   int32_t resbuf_size;
 } ParsedReq;
 
+typedef enum {
+  ResStatus_Ok,
+  ResStatus_NoKey,
+  ResStatus_CNF, // cmd not found
+} ResStatus;
 
 int32_t nread(FileDesc fd,char* buf, size_t n);
 int32_t nwrite(FileDesc fd,char* buf, size_t n);
@@ -47,9 +52,6 @@ int32_t recv_req(FileDesc client_fd);
 int fd_set_nb(FileDesc fd);
 
 
-void handle_req(Conn* conn);
-void handle_res(Conn* conn);
-bool recv_req_conn(Conn* connn);
 
 
 
