@@ -12,25 +12,26 @@
 #define DA_IMPLEMENTATION
 #include "da.h"
 
-#include "ht.h"
+#define HMAP_IMPLEMENTATION
+#include "hm.h"
 
-
-typedef struct HT_string {
-  HT_Node node;
-  char val[16];
-} HT_string;
 
 void main(void) {
 
-  HTable* table = ht_init(4);
+  HMap* table = hm_init();
 
-  ht_insert(table,"asd","asd");
-  ht_insert(table,"ur mom","coool");
-  ht_insert(table,"kinda cool","asd");
-  ht_insert(table,"kinda cool","ur mom");
-  ht_print(table);
+  hm_insert(table,"asd","asd");
+  hm_insert(table,"ur mom","coool");
+  hm_insert(table,"kinda cool","asd");
+  hm_insert(table,"kinda cool","ur mom");
+  hm_insert(table,"1","42 69");
+  hm_print(table);
 
-  ht_free(table);
+
+  char* val = hm_get(table,"1");
+  printf("%s\n",val);
+
+  hm_free(table);
 }
 
 
